@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Producción</title>
+    <link rel="icon" href="image/Designer.jpeg" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <style>
+        /* Estilos para el efecto de desvanecimiento */
+        .fade {
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .fade.in {
+            opacity: 1;
+        }
+        /* Estilos personalizados para la navbar */
+        .navbar-custom {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(45deg, #383838, #08277e, #4b4daf, #0d6efd);
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s ease infinite;
+        }
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: #ffffff; /* Color de texto blanco */
+        }
+        .navbar-custom .nav-link:hover {
+            color: #d4edda; /* Color de texto al pasar el ratón */
+        }
+        .navbar-custom .btn-warning {
+            color: #343a40; /* Color de texto del botón de cerrar sesión */
+        }
+        /* Estilos personalizados para el enlace elegante en la navbar */
+        .nav-link-elegant {
+            background-color: #0d6efd; /* Color primario de Bootstrap */
+            color: white !important;
+            border-radius: 10px;
+            padding: 8px 10px;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            text-align: center;
+        }
+        .nav-link-elegant:hover {
+            background-color: #0056b3; /* Color más oscuro al pasar el ratón */
+        }
+        /* Estilos para el botón de opciones */
+        .navbar-toggler {
+            border-color: #0d6efd; /* Color del borde del botón de opciones */
+        }
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%280, 123, 255, 0.5%29' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+        }
+        /* Estilos para asegurar la responsividad */
+        @media (max-width: 767.98px) {
+            .navbar-nav {
+                text-align: center;
+                width: 100%;
+            }
+            .navbar-nav .nav-item {
+                margin-bottom: 10px;
+            }
+            .navbar-nav .nav-item .nav-link-elegant,
+            .navbar-nav .nav-item .btn-warning {
+                width: 100%;
+                text-align: center;
+            }
+            .navbar-collapse {
+                justify-content: center;
+            }
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Añadir efecto de desvanecimiento al cargar la página
+            document.body.classList.add('fade', 'in');
+            const links = document.querySelectorAll('a');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetUrl = this.getAttribute('href');
+                    document.body.classList.add('fade');
+                    setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 500); // Duración de la transición CSS
+                });
+            });
+
+            // Añadir evento para el filtro de fechas
+            document.getElementById('filterButton').addEventListener('click', filterByDate);
+        });
+
+        // Función para exportar la tabla a Excel
+        function exportToExcel() {
+            // Obtener la tabla
+            const table = document.querySelector("table");
+            const workbook = XLSX.utils.table_to_book(table, { sheet: "Producción" });
+
+            // Calcular métricas
+            const totalUnits = Array.from(table.querySelectorAll("tbody tr"))
+                .reduce((sum, row) => sum + parseInt(row.cells[2].innerText), 0);
+            const operarios = new Set(Array.from(table.querySelectorAll("tbody tr"))
+                .map(row => row.cells[1].innerText)).size;
+
+            // Agregar métricas a una nueva hoja
+            const metricsData = [
+                ["Métrica", "Valor"],
+                ["Total Unidades Producidas", totalUnits],
+                ["Número de Operarios", operarios]
+            ];
+            const metricsSheet = XLSX.utils.aoa_to_sheet(metricsData);
+            XLSX.utils.book_append_sheet(workbook, metricsSheet, "Métricas");
+
+            // Datos para el gráfico de torta
+            const chartData = [
+                ["Área", "Unidades Producidas"],
+                ["Corte", 200],
+                ["Confección", 300],
+                ["Revisión", 150]
+            ];
+            const chartSheet = XLSX.utils.aoa_to_sheet(chartData);
+            XLSX.utils.book_append_sheet(workbook, chartSheet, "Gráfico de Tortas");
+
+            // Generar el archivo Excel
+            XLSX.writeFile(workbook, "gestion_produccion.xlsx");
+        }
+
+        // Función para cerrar sesión
+        function logout() {
+            // Limpiar localStorage y sessionStorage si se usaron
+            localStorage.clear();
+            sessionStorage.clear();
+            // Redirigir al usuario a la página de inicio de sesión
+            window.location.href = "index.html";
+        }
+
+        // Función para convertir una fecha en formato "5/3/2025 10:30:00 a. m." a un objeto Date
+        function parseDate(dateString) {
+            const [datePart, timePart, period] = dateString.split(' ');
+            const [month, day, year] = datePart.split('/');
+            let [hours, minutes, seconds] = timePart.split(':');
+            if (period === 'p. m.' && hours !== '12') {
+                hours = parseInt(hours) + 12;
+            } else if (period === 'a. m.' && hours === '12') {
+                hours = 0;
+            }
+            return new Date(year, month - 1, day, hours, minutes, seconds);
+        }
+
+        // Función para filtrar la tabla por fecha
+        function filterByDate() {
+            const startDate = parseDate(document.getElementById('startDate').value + ' 12:00:00 a. m.');
+            const endDate = parseDate(document.getElementById('endDate').value + ' 11:59:59 p. m.');
+            const rows = document.querySelectorAll('table tbody tr');
+
+            rows.forEach(row => {
+                const date = parseDate(row.cells[0].innerText);
+                if (date >= startDate && date <= endDate) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <a href="panel_admin.html" class="btn btn-secondary btn-sm me-2" title="Volver">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+            <div class="text-center flex-grow-1">
+                <a class="navbar-brand d-flex align-items-center justify-content-center" href="#">
+                    <img src="Image/LogoSystem.png" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+                    <span class="fw-bold">Sistema de Producción</span>
+                </a>
+            </div>
+            <button class="btn btn-warning" onclick="logout()" title="Cerrar Sesión">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <div class="container mt-5">
+        <h3 class="text-center fw-bold">Gestión de Producción</h3>
+
+        <!-- Filtros y exportación -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex">
+                <input type="date" id="startDate" class="form-control me-2" placeholder="Fecha de inicio">
+                <input type="date" id="endDate" class="form-control me-2" placeholder="Fecha de fin">
+                <button class="btn btn-primary" id="filterButton">Filtrar</button>
+            </div>
+            <button class="btn btn-success" onclick="exportToExcel()">
+                <i class="fas fa-file-excel"></i> Exportar a Excel
+            </button>
+        </div>
+
+        <!-- Tabla de producción -->
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered text-center">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Operario</th>
+                        <th>Unidades Producidas</th>
+                        <th>Área</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>5/2/2025 10:00:00 a. m.</td>
+                        <td>Juan Pérez</td>
+                        <td>50</td>
+                        <td>Corte</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/2/2025 11:00:00 a. m.</td>
+                        <td>Ana Gómez</td>
+                        <td>60</td>
+                        <td>Confección</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/2/2025 12:00:00 p. m.</td>
+                        <td>Carlos Ramírez</td>
+                        <td>45</td>
+                        <td>Revisión</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/3/2025 9:00:00 a. m.</td>
+                        <td>Laura Martínez</td>
+                        <td>70</td>
+                        <td>Corte</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/3/2025 10:30:00 a. m.</td>
+                        <td>Pedro López</td>
+                        <td>80</td>
+                        <td>Confección</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/4/2025 11:00:00 a. m.</td>
+                        <td>María Fernández</td>
+                        <td>90</td>
+                        <td>Revisión</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/5/2025 8:00:00 a. m.</td>
+                        <td>Jorge Silva</td>
+                        <td>100</td>
+                        <td>Corte</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/5/2025 9:30:00 a. m.</td>
+                        <td>Clara Ruiz</td>
+                        <td>110</td>
+                        <td>Confección</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/6/2025 10:00:00 a. m.</td>
+                        <td>Fernando Torres</td>
+                        <td>120</td>
+                        <td>Revisión</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/7/2025 11:00:00 a. m.</td>
+                        <td>Isabel Gómez</td>
+                        <td>130</td>
+                        <td>Corte</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/8/2025 12:00:00 p. m.</td>
+                        <td>Diego Martínez</td>
+                        <td>140</td>
+                        <td>Confección</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/9/2025 1:00:00 p. m.</td>
+                        <td>Patricia López</td>
+                        <td>150</td>
+                        <td>Revisión</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/10/2025 2:00:00 p. m.</td>
+                        <td>Raúl Pérez</td>
+                        <td>160</td>
+                        <td>Corte</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/11/2025 3:00:00 p. m.</td>
+                        <td>Lucía Ramírez</td>
+                        <td>170</td>
+                        <td>Confección</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/12/2025 4:00:00 p. m.</td>
+                        <td>Andrés Gómez</td>
+                        <td>180</td>
+                        <td>Revisión</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/13/2025 5:00:00 p. m.</td>
+                        <td>Elena Torres</td>
+                        <td>190</td>
+                        <td>Corte</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                    <tr>
+                        <td>5/14/2025 6:00:00 p. m.</td>
+                        <td>Samuel Ruiz</td>
+                        <td>200</td>
+                        <td>Confección</td>
+                        <td>Sin observaciones</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pie de página -->
+    <footer class="text-center mt-5 py-3 bg-light">
+        <p class="mb-0">&copy; 2025 Sistema de Producción de Confección</p>
+    </footer>
+
+    <!-- Enlace a los scripts de FontAwesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</body>
+</html>

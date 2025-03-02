@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- Metadatos del documento -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Producción</title>
+    <!-- Favicon del sitio -->
+    <link rel="icon" href="image/Designer.jpeg" type="image/png">
+    <!-- Enlace a la hoja de estilos de Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Enlace a la hoja de estilos personalizada -->
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilos para las notificaciones */
+        .notification {
+            display: none; /* Oculta las notificaciones por defecto */
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .success {
+            background-color: #d4edda; /* Fondo verde claro para éxito */
+            color: #155724; /* Texto verde oscuro */
+        }
+
+        .error {
+            background-color: #f8d7da; /* Fondo rojo claro para error */
+            color: #721c24; /* Texto rojo oscuro */
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Contenedor principal que ocupa toda la altura (vh-100) y centra el contenido -->
+    <div class="container vh-100 d-flex align-items-center justify-content-center">
+        <!-- Tarjeta con sombra, relleno (p-4), texto centrado y estilo personalizado -->
+        <div class="card shadow-lg p-4 text-center" style="width: 25rem; border-radius: 15px;">
+            <!-- Contenedor del logo centrado con margen inferior -->
+            <div class="text-center mb-4">
+                <img src="image/LogoSystem.png" alt="Logo de la Empresa" style="width: 120px;">
+            </div>
+            <!-- Título de la página -->
+            <h3 class="mb-4 fw-bold">Iniciar Sesión</h3>
+            <!-- Formulario de inicio de sesión -->
+            <form id="login-form">
+                <!-- Contenedor del campo de correo/teléfono -->
+                <div class="mb-3 text-start">
+                    <label for="login" class="form-label">Correo Electrónico o Teléfono</label>
+                    <input type="text" class="form-control" id="login" name="login" placeholder="usuario@example.com o 1234567890" required>
+                </div>
+                <!-- Contenedor del campo de contraseña -->
+                <div class="mb-3 text-start">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                <!-- Div para mostrar notificaciones -->
+                <div id="notification" class="notification"></div>
+                <!-- Mensaje de error oculto -->
+                <div id="error-message" class="text-danger text-center d-none mb-3">Usuario o contraseña incorrectos.</div>
+                <!-- Botón de inicio de sesión -->
+                <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+            </form>
+            <!-- Botón para abrir el modal de tipo de usuario -->
+            <button type="button" class="btn btn-secondary w-100 mt-3" data-bs-toggle="modal" data-bs-target="#userTypeModal">Crear Cuenta</button>
+            <!-- Enlace para recuperar la contraseña -->
+            <button type="button" class="btn btn-link mt-2" onclick="location.href='recuperar_contrasena.html'">¿Olvidaste tu contraseña?</button>
+        </div>
+    </div>
+
+    <!-- Modal para selección de tipo de usuario -->
+    <div class="modal fade" id="userTypeModal" tabindex="-1" aria-labelledby="userTypeModalLabel" aria-hidden="true">
+        <!-- Diálogo del modal centrado -->
+        <div class="modal-dialog modal-dialog-centered">
+            <!-- Contenido del modal -->
+            <div class="modal-content">
+                <!-- Encabezado del modal -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userTypeModalLabel">Selecciona el tipo de usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <!-- Cuerpo del modal -->
+                <div class="modal-body text-center">
+                    <p>Selecciona el tipo de usuario que deseas agregar:</p>
+                    <!-- Contenedor para los botones de tipo de usuario -->
+                    <div class="d-flex justify-content-around">
+                        <a href="crear_usuario.html" class="btn btn-primary">Usuario Operario</a>
+                        <a href="crear_usuario_Admin.html" class="btn btn-danger">Usuario Admin</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para mostrar las notificaciones
+        function showNotification(message, isSuccess) {
+            const notification = document.getElementById('notification');
+            notification.innerText = message;
+            notification.className = `notification ${isSuccess ? 'success' : 'error'}`;
+            notification.style.display = 'block'; // Mostrar la notificación
+        }
+
+        // Evento de envío del formulario
+        document.getElementById('login-form').addEventListener('submit', function (event) {
+            event.preventDefault(); // Evita el envío por defecto del formulario
+
+            // Obtener los valores de login y password
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+
+            // Simulación de usuarios
+            const users = {
+                "admin@example.com": { role: "admin", password: "admin123" },
+                "operario@example.com": { role: "operario", password: "operario123" }
+            };
+
+            // Verificar si el usuario y la contraseña son correctos
+            if (users[login] && users[login].password === password) {
+                const role = users[login].role;
+                // Limpiar el mensaje de error cuando el inicio de sesión es correcto
+                errorMessage.classList.add('d-none');
+                window.location.href = role === "admin" ? "panel_admin.html" : "ingresar_produccion.html";
+            } else {
+                // Mostrar mensaje de error
+                errorMessage.classList.remove('d-none');
+                document.getElementById('password').value = "";
+                showNotification('Usuario o contraseña incorrectos.', false);
+            }
+        });
+    </script>
+
+    <!-- Pie de página -->
+    <footer class="text-center mt-5 py-3 bg-light">
+        <p class="text-muted">&copy; 2025 Sistema de Producción de Confección</p>
+    </footer>
+
+    <!-- Enlace a los scripts de Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

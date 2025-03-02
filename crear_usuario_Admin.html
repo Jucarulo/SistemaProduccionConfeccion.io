@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- Metadatos del documento -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Usuario Admin</title>
+    <!-- Favicon del sitio -->
+    <link rel="icon" href="image/Designer.jpeg" type="image/png">
+    <!-- Enlace a la hoja de estilos de Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Enlace a la hoja de estilos personalizada -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Contenedor principal del formulario -->
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <div class="form-content">
+            <!-- Encabezado con el logo de la empresa -->
+            <div class="text-center mb-3 header-container">
+                <img src="Image/LogoSystem.png" alt="Logo de la Empresa" class="img-fluid logo">
+            </div>
+            <!-- Título del formulario -->
+            <h3 class="text-center mb-3">Crear Usuario Admin</h3>
+            <!-- Contenedor para notificaciones -->
+            <div id="notification" class="notification"></div>
+            <!-- Formulario para crear un usuario administrador -->
+            <form id="createAdminForm">
+                <!-- Campo para el nombre -->
+                <div class="mb-2">
+                    <label for="nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" placeholder="Nombre completo" required>
+                </div>
+                <!-- Campo para el correo electrónico -->
+                <div class="mb-2">
+                    <label for="email" class="form-label">Correo Electrónico</label>
+                    <input type="email" class="form-control" id="email" placeholder="usuario@example.com" required>
+                </div>
+                <!-- Campo para el teléfono -->
+                <div class="mb-2">
+                    <label for="telefono" class="form-label">Teléfono</label>
+                    <input type="tel" class="form-control" id="telefono" placeholder="Ej: 1234567890" pattern="[0-9]{10}" required>
+                </div>
+                <!-- Campo para la contraseña -->
+                <div class="mb-2">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password" placeholder="••••••••" required>
+                </div>
+                <!-- Botón para enviar el formulario -->
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Crear Usuario</button>
+                    <!-- Enlace para volver a la gestión de usuarios -->
+                    <a href="gestion_usuarios.html" class="btn btn-secondary">Volver</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pie de página -->
+    <footer class="text-center mt-4">
+        <p class="text-muted">&copy; 2025 Sistema de Producción de Confección</p>
+    </footer>
+
+    <!-- Enlace a los scripts de Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Enlace al archivo de funciones JavaScript -->
+    <script src="functions.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Manejar el evento de envío del formulario
+            document.getElementById('createAdminForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                // Obtener los valores de los campos del formulario
+                const nombre = document.getElementById('nombre').value;
+                const email = document.getElementById('email').value;
+                const telefono = document.getElementById('telefono').value;
+                const password = document.getElementById('password').value;
+
+                // Expresión regular para validar el correo electrónico
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                // Expresión regular para validar la contraseña
+                const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+                // Validar los campos del formulario
+                if (!nombre || !email || !telefono || !password) {
+                    showNotification('Por favor, ingresa todos los datos de usuario.', false);
+                } else if (!emailRegex.test(email)) {
+                    showNotification('Por favor, ingrese un correo electrónico válido.', false);
+                } else if (!/^\d{10}$/.test(telefono)) {
+                    showNotification('Introduce un número de teléfono válido (10 dígitos).', false);
+                } else if (!passwordRegex.test(password)) {
+                    showNotification("La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.", false);
+                } else {
+                    showNotification('Usuario creado exitosamente!', true);
+                }
+            });
+
+            // Añadir efecto de desvanecimiento al hacer clic en los enlaces
+            const links = document.querySelectorAll('a');
+            links.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetUrl = this.getAttribute('href');
+                    document.body.classList.add('fade');
+                    setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 500); // Duración de la transición CSS
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
